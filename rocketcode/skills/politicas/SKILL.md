@@ -17,9 +17,14 @@ As regras mudam quando um documento é publicado ou revisado, e a execução seg
 
 ## Fonte local (servidor)
 
-Antes de qualquer outra coisa, verificar a variável de ambiente `ROCKETCODE_POLICIES_DIR` (por exemplo, com `printenv ROCKETCODE_POLICIES_DIR` no Bash).
+Antes de qualquer outra coisa, descobrir o valor de `ROCKETCODE_POLICIES_DIR`, de uma destas formas:
 
-- Se estiver **vazia ou indefinida**: ignorar esta seção e seguir os passos 1 a 6, que leem do Drive.
+- como informado no contexto da sessão (por exemplo, uma linha `ROCKETCODE_POLICIES_DIR=/caminho` no início do pedido). Sessões sem shell, como a do Verificador de Conformidade, informam o valor assim, e ele vale tanto quanto a variável de ambiente;
+- ou com `printenv ROCKETCODE_POLICIES_DIR` no Bash, quando houver Bash.
+
+Sem Bash, a falta do `printenv` não significa que a variável está indefinida: se o contexto da sessão cita um diretório local de normas, ele está definido. Nesse caso, nunca usar o conector do Google Drive.
+
+- Se estiver **vazia ou indefinida** (nem o contexto da sessão nem o ambiente informam um diretório): ignorar esta seção e seguir os passos 1 a 6, que leem do Drive.
 - Se estiver **definida**: as normas vêm só desse diretório, exportadas do Drive por um processo externo (o servidor do Verificador de Conformidade não tem conector). **Não chamar nenhuma ferramenta do conector Google Drive, nem procurar por ela, nem pedir `/mcp`.** Pular os passos 1 e 2 e fazer o seguinte:
 
 1. Ler `$ROCKETCODE_POLICIES_DIR/manifest.json`: lista de `{ fileId, title, mimeType, modifiedTime, path }`, um item por arquivo exportado.
