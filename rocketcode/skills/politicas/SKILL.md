@@ -5,7 +5,7 @@ description: Carrega, direto da pasta oficial no Google Drive, a versão vigente
 
 # Políticas da Rocket Code
 
-A única fonte das regras é a pasta de Segurança da Informação no Google Drive:
+A única fonte das regras é a pasta de Segurança da Informação no Google Drive (ou, no servidor, a exportação dela em `ROCKETCODE_POLICIES_DIR`; ver "Fonte local"):
 
 - ID da pasta: `1mUy_BDM-D4w-JrnSkbYZhWP0xRQik24Q`
 - URL: https://drive.google.com/drive/folders/1mUy_BDM-D4w-JrnSkbYZhWP0xRQik24Q
@@ -15,7 +15,29 @@ As regras mudam quando um documento é publicado ou revisado, e a execução seg
 - Nunca aplicar regra de memória, de resumo antigo, de cópia local ou de exemplo desta skill. Valores (prazos, limiares, métodos de MFA, algoritmos) vêm sempre do documento lido agora.
 - Nunca copiar as políticas para o repositório de código.
 
+## Fonte local (servidor)
+
+Antes de qualquer outra coisa, verificar a variável de ambiente `ROCKETCODE_POLICIES_DIR` (por exemplo, com `printenv ROCKETCODE_POLICIES_DIR` no Bash).
+
+- Se estiver **vazia ou indefinida**: ignorar esta seção e seguir os passos 1 a 6, que leem do Drive.
+- Se estiver **definida**: as normas vêm só desse diretório, exportadas do Drive por um processo externo (o servidor do Verificador de Conformidade não tem conector). **Não chamar nenhuma ferramenta do conector Google Drive, nem procurar por ela, nem pedir `/mcp`.** Pular os passos 1 e 2 e fazer o seguinte:
+
+1. Ler `$ROCKETCODE_POLICIES_DIR/manifest.json`: lista de `{ fileId, title, mimeType, modifiedTime, path }`, um item por arquivo exportado.
+2. Ler cada arquivo listado, em paralelo, pelo `path` (relativo ao diretório):
+   - Documentos: `docs/<fileId>.md`, o texto completo.
+   - Planilhas: `sheets/<fileId>/<aba>.csv`, um arquivo por aba; ler todas as abas presentes.
+3. Seguir a partir do passo 3 (extrair código, versão, data de emissão, classificação e aprovação do cabeçalho), 4, 5 e 6, como no caso do Drive.
+
+Regras desta fonte:
+
+- O conteúdo do diretório é a versão vigente. Não comparar com o Drive nem com leituras anteriores além do que o passo "Reuso" já faz.
+- Na tabela de fontes (seção 6), citar o `modifiedTime` do manifesto como a data da leitura de cada documento.
+- Se o diretório não existir, estiver vazio, não tiver `manifest.json` ou o manifesto não listar nenhum arquivo legível: parar e dizer que as normas não foram carregadas e que a verificação não foi feita. Não cair para o Drive, não usar memória nem resumos.
+- Arquivo listado no manifesto mas ausente no disco: dizer qual não foi lido e tratar a leitura como incompleta.
+
 ## 1. Conectar ao Drive
+
+(Só quando `ROCKETCODE_POLICIES_DIR` não está definido.)
 
 Usar as ferramentas do conector Google Drive (os nomes variam por ambiente; procurar por `search_files`, `read_file_content` e `get_file_metadata`, carregando-as se forem ferramentas adiadas).
 
