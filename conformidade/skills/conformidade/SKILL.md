@@ -7,8 +7,8 @@ description: Guarda-corpo para escrever código em repositórios da Rocket Code 
 
 ## 1. Antes de planejar
 
-1. Invocar a skill `rocketcode:politicas`. Se já foram carregadas nesta conversa, ela só relê o que mudou no Drive; aplicar imediatamente qualquer regra nova ou alterada.
-2. Selecionar as regras dos temas que a tarefa toca (ver `references/temas.md` da skill `rocketcode:politicas`).
+1. Invocar a skill `conformidade:politicas`. Se já foram carregadas nesta conversa, ela só relê o que mudou no Drive; aplicar imediatamente qualquer regra nova ou alterada.
+2. Selecionar as regras dos temas que a tarefa toca (ver `references/temas.md` da skill `conformidade:politicas`).
 3. Dizer ao usuário, em poucas linhas, quais regras vão moldar a implementação (ID e o essencial), antes de começar.
 
 ## 2. Durante a implementação
@@ -21,7 +21,7 @@ description: Guarda-corpo para escrever código em repositórios da Rocket Code 
 
 ## 3. Ao terminar
 
-Antes de dizer que terminou, conferir o próprio diff contra as regras selecionadas, como na skill `rocketcode:revisao`, e informar:
+Antes de dizer que terminou, conferir o próprio diff contra as regras selecionadas, como na skill `conformidade:revisao`, e informar:
 
 - as regras aplicadas, com a versão do documento usada;
 - qualquer regra que não pôde ser cumprida e por quê;

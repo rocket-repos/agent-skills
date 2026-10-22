@@ -1,7 +1,7 @@
 {
-  "name": "rocketcode",
+  "name": "conformidade",
   "description": "Skills que aplicam nas bases de código as políticas de segurança da informação e privacidade da Rocket Code, lidas na versão vigente do Google Drive a cada uso.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Rocket Code"
   },
