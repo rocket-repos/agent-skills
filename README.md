@@ -28,7 +28,8 @@ Requer o conector **claude.ai Google Drive** autenticado (`/mcp`) e acesso de le
 O ID da pasta não fica neste repositório. Ao ativar o plugin, o Claude Code pede a opção **ID da pasta de Segurança da Informação no Google Drive** (`drive_folder_id`): o trecho depois de `/folders/` na URL da pasta. Para mudar depois, use `/config`. No servidor do Verificador de Conformidade a opção não é usada: as normas vêm exportadas em `ROCKETCODE_POLICIES_DIR`.
 
 ```
-/plugin install rocketcode --marketplace roket-code/agent-skills
+claude plugin marketplace add rocket-repos/agent-skills
+claude plugin install rocketcode@rocket-code
 ```
 
 ## Skill Format
