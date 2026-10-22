@@ -7,7 +7,7 @@ description: Audita um repositório inteiro da Rocket Code contra a versão vige
 
 ## 1. Carregar as políticas
 
-Invocar a skill `rocketcode:politicas` e seguir até o fim. Sem as políticas lidas nesta execução, não auditar: dizer que a auditoria não foi feita.
+Invocar a skill `conformidade:politicas` e seguir até o fim. Sem as políticas lidas nesta execução, não auditar: dizer que a auditoria não foi feita.
 
 ## 2. Mapear o repositório
 
@@ -21,7 +21,7 @@ Levantar, sem abrir `.env` nem arquivos com valores de segredos:
 - autenticação, sessão, autorização e painéis administrativos;
 - jobs agendados, scripts operacionais e CI (`.github/`).
 
-Em repositórios grandes, dividir os temas entre subagentes em paralelo, passando a cada um a lista de regras do tema e o trecho correspondente de `references/temas.md` da skill `rocketcode:politicas`.
+Em repositórios grandes, dividir os temas entre subagentes em paralelo, passando a cada um a lista de regras do tema e o trecho correspondente de `references/temas.md` da skill `conformidade:politicas`.
 
 ## 3. Verificar cada regra de alcance `código`
 
@@ -49,7 +49,7 @@ Não marcar "conforme" por ausência de evidência contrária: sem evidência po
 
 Na conversa, nesta ordem:
 
-1. Fontes usadas (tabela da skill `rocketcode:politicas`, com versões e data da leitura).
+1. Fontes usadas (tabela da skill `conformidade:politicas`, com versões e data da leitura).
 2. Resumo: contagem por situação e por severidade.
 3. Divergências (seção 4.1).
 4. Achados não conformes e parciais, por severidade, com evidência.

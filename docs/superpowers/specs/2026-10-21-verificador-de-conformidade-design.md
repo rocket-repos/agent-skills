@@ -54,7 +54,7 @@ Tudo o que é relevante aparece num canal do Slack dedicado, onde o time aprova,
 - **GitHub:** a organização `rocket-repos` está no plano Team, com 18 repositórios privados e 1 público. Esse plano permite um ruleset de organização que exige a verificação de um GitHub App específico nos repositórios selecionados.
 - **Seleção dos repositórios:** feita por uma **propriedade personalizada** da organização, `verificar-conformidade`, do tipo verdadeiro/falso, com valor padrão falso. O dono marca `verificar-conformidade = true` nos repositórios que quer monitorar. **Repositórios arquivados são sempre ignorados, mesmo com a propriedade marcada.** A mesma propriedade define onde o agente atua e onde o ruleset exige o check, então os dois nunca divergem. **[Decisão do redator]** A escolha foi a propriedade personalizada e não os tópicos do repositório. O ruleset de organização sabe filtrar por propriedade, mas não por tópico, e só os donos da organização alteram a propriedade, enquanto qualquer administrador do repositório edita os tópicos.
 - **Drive:** a pasta pertence a uma conta pessoal do Google (Meu Drive, sem Google Workspace).
-- **Plugin existente:** as regras de leitura e interpretação das normas já estão no plugin `rocketcode` (`agent-skills/rocketcode`), com as skills `politicas`, `auditoria`, `revisao` e `verificar-conformidade`. O agente reaproveita esse plugin em vez de duplicar a lógica.
+- **Plugin existente:** as regras de leitura e interpretação das normas já estão no plugin `conformidade` (`agent-skills/conformidade`), com as skills `politicas`, `auditoria`, `revisao` e `verificar-conformidade`. O agente reaproveita esse plugin em vez de duplicar a lógica.
 - **Regras do repositório que o agente analisa:** nunca abrir `.env` nem arquivos com valores de segredos, como as skills já determinam.
 
 ## 6. Arquitetura
@@ -64,7 +64,7 @@ Tudo o que é relevante aparece num canal do Slack dedicado, onde o time aprova,
 **[Decisão do redator]** O agente tem duas camadas com responsabilidades separadas:
 
 - **Orquestrador.** Um serviço de longa duração na VPS. Ele recebe eventos do GitHub e do Slack, agenda a rotina diária e mantém o estado. Também guarda todas as credenciais e faz todas as escritas: check runs, comentários, mensagens no Slack, edições no Drive e linhas nas planilhas. O orquestrador é código determinístico.
-- **Analista.** Uma execução de `claude -p` por tarefa, com o plugin `rocketcode` carregado via `--plugin-dir`. Recebe só o material da tarefa: o diff ou o checkout, as normas exportadas e o histórico de liberações relevante. Devolve um resultado estruturado em JSON. O analista não tem credenciais do GitHub, do Slack nem do Google, e não escreve em lugar nenhum fora do seu diretório temporário.
+- **Analista.** Uma execução de `claude -p` por tarefa, com o plugin `conformidade` carregado via `--plugin-dir`. Recebe só o material da tarefa: o diff ou o checkout, as normas exportadas e o histórico de liberações relevante. Devolve um resultado estruturado em JSON. O analista não tem credenciais do GitHub, do Slack nem do Google, e não escreve em lugar nenhum fora do seu diretório temporário.
 
 O motivo é que o analista lê conteúdo não confiável, o código dos PRs. Se esse conteúdo conseguir manipulá-lo, o pior que acontece é um veredito errado, que o time pode liberar ou contestar. Ele nunca consegue publicar, aprovar ou vazar credenciais.
 
@@ -96,7 +96,7 @@ Regras para cada execução do analista:
 
 - O orquestrador lista a pasta do Drive (com subpastas) e compara o `modifiedTime` de cada arquivo com o último exportado. O que mudou é exportado de novo em texto (Docs como Markdown ou texto, Sheets como CSV por aba) para um cache local na VPS, fora de qualquer repositório.
 - Toda tarefa usa a versão do cache conferida no início daquela tarefa. Uma norma publicada vale a partir da tarefa seguinte, como o plugin já promete.
-- **[Decisão do redator]** A skill `rocketcode:politicas` ganha um modo alternativo: quando recebe um diretório de normas exportadas (ex.: variável `ROCKETCODE_POLICIES_DIR`), lê dali em vez do conector do Drive. Fora da VPS, o comportamento atual não muda. É a única mudança no plugin.
+- **[Decisão do redator]** A skill `conformidade:politicas` ganha um modo alternativo: quando recebe um diretório de normas exportadas (ex.: variável `ROCKETCODE_POLICIES_DIR`), lê dali em vez do conector do Drive. Fora da VPS, o comportamento atual não muda. É a única mudança no plugin.
 - As planilhas lidas pelo conector hoje vêm truncadas. Na exportação por API, elas vêm inteiras.
 
 ## 7. Comportamentos
@@ -106,7 +106,7 @@ Regras para cada execução do analista:
 Disparo: PR aberto, reaberto, marcado como pronto para revisão, ou novo commit. **[Decisão do redator]** PRs em rascunho também são revisados. Um commit novo cancela a revisão em andamento do mesmo PR.
 
 1. O orquestrador cria o check run `Verificador de Conformidade` em `in_progress`.
-2. O analista roda a skill `rocketcode:revisao` sobre o diff (base `merge-base`), com as normas vigentes e as liberações anteriores relevantes (ver 7.4).
+2. O analista roda a skill `conformidade:revisao` sobre o diff (base `merge-base`), com as normas vigentes e as liberações anteriores relevantes (ver 7.4).
 3. Ele devolve, para cada achado: classificação (bloqueante, recomendação ou atualização documental), regra (documento, versão e seção), `arquivo:linha`, o problema, a correção sugerida e um identificador estável do achado (regra + arquivo + natureza do problema) para comparar entre execuções.
 4. Resultado:
    - **Com bloqueantes:** check em `failure`. O merge fica bloqueado pelo ruleset. Um comentário no PR lista os bloqueantes, cada um com a norma, o problema e como corrigir. As recomendações vêm numa seção separada. Uma mensagem no Slack com o botão **Liberar** (ver 7.4).
@@ -123,7 +123,7 @@ Disparo: PR aberto, reaberto, marcado como pronto para revisão, ou novo commit.
 
 **[Decisão do redator]** Uma vez por dia, às 07:00 (America/Sao_Paulo), em todos os repositórios não arquivados da `rocket-repos` com `verificar-conformidade = true`. Marcar ou desmarcar um repositório vale a partir do próximo evento ou da próxima varredura. Repositório desmarcado sai da varredura, e os achados dele saem do relatório como "fora do monitoramento", não como resolvidos.
 
-1. Para cada repositório, o analista roda a skill `rocketcode:auditoria` na `main` atual.
+1. Para cada repositório, o analista roda a skill `conformidade:auditoria` na `main` atual.
 2. Na mesma rotina, o analista confere os **prazos de processo** que as próprias normas definem: revisões periódicas de acesso, testes de restauração, treinamentos, revisão anual dos documentos, revisão do inventário etc. A referência são as datas nos registros (REG) do Drive. Os prazos vêm dos documentos, nunca de valores fixos no código do agente.
 3. Também procura **documentos desatualizados**: frases das normas, do Inventário ou do ROPA que o código contradiz, fornecedores ou dados presentes no código e ausentes das planilhas, e contradições entre documentos. Cada um vira uma proposta (7.3).
 4. O orquestrador compara com o resultado do dia anterior, guardado no estado local, e publica **uma mensagem diária** no canal:
@@ -216,7 +216,7 @@ A conta de serviço não cria arquivos. Antes de ligar o agente, o dono cria na 
   - O banco tem uma credencial (a string de conexão), que entra na tabela de 6.2 e no teste diário de 7.6. Se o banco estiver inacessível, isso gera alerta no Slack e as tarefas não rodam, ou seja, os PRs ficam bloqueados como em 7.5.
   - O novo fornecedor ou ativo entra no Inventário de Ativos por proposta (7.3) antes de o agente entrar em produção.
 - **[Decisão do redator]** Stack em TypeScript/Node, a mesma dos produtos da empresa.
-- Instalação na VPS com **Docker**: um `Dockerfile` para a imagem do agente (com o Claude Code e o plugin `rocketcode`) e um `docker-compose.yml` que sobe só o agente. O Postgres e a forma de entrega dos webhooks (túnel ou proxy já existente na VPS) ficam fora do compose. O contêiner também isola o analista do sistema da VPS.
+- Instalação na VPS com **Docker**: um `Dockerfile` para a imagem do agente (com o Claude Code e o plugin `conformidade`) e um `docker-compose.yml` que sobe só o agente. O Postgres e a forma de entrega dos webhooks (túnel ou proxy já existente na VPS) ficam fora do compose. O contêiner também isola o analista do sistema da VPS.
 - **[Livre para o construtor]** Concorrência de execuções do analista, timeouts, formato exato do JSON do analista, bibliotecas, logs locais (sem dados pessoais nem segredos) e onde o código do agente fica versionado.
 - Canal do Slack: **[Decisão do redator]** `#conformidade`. O dono cria o canal e convida o bot.
 

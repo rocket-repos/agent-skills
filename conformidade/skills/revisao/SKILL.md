@@ -7,7 +7,7 @@ description: Revisa uma mudança (diff local, branch ou pull request) em reposit
 
 ## 1. Carregar as políticas
 
-Invocar a skill `rocketcode:politicas`. Sem as políticas lidas nesta execução, não emitir parecer de conformidade.
+Invocar a skill `conformidade:politicas`. Sem as políticas lidas nesta execução, não emitir parecer de conformidade.
 
 ## 2. Obter a mudança
 
@@ -19,7 +19,7 @@ Ler o contexto em volta de cada trecho alterado quando o diff sozinho não basta
 
 ## 3. Selecionar as regras
 
-Pelos arquivos e conteúdos alterados, escolher os temas afetados (ver `references/temas.md` da skill `rocketcode:politicas`). Sempre incluir:
+Pelos arquivos e conteúdos alterados, escolher os temas afetados (ver `references/temas.md` da skill `conformidade:politicas`). Sempre incluir:
 
 - dependência nova ou atualizada → desenvolvimento seguro e fornecedores;
 - variável de ambiente nova → segredos, segregação de ambientes e Inventário;

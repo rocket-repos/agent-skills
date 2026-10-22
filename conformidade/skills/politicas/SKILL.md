@@ -1,6 +1,6 @@
 ---
 name: politicas
-description: Carrega, direto da pasta oficial no Google Drive, a versão vigente das políticas, normas, planos, procedimentos e registros de segurança da informação e privacidade da Rocket Code (POL-SI, NOR-SI, PLA-SI, PRO-SI, REG-SI, REL-SI, Inventário de Ativos, ROPA) e as converte em regras verificáveis no código. Use antes de auditar, revisar ou escrever código em repositórios da Rocket Code (organização GitHub rocket-repos, como meu-carro-e-seu); quando alguém perguntar o que a política da empresa exige sobre logs, segredos, MFA, autenticação, criptografia, retenção, dados pessoais ou sensíveis, Senatran, backup, monitoramento, CI ou fornecedores; e sempre que outra skill rocketcode pedir.
+description: Carrega, direto da pasta oficial no Google Drive, a versão vigente das políticas, normas, planos, procedimentos e registros de segurança da informação e privacidade da Rocket Code (POL-SI, NOR-SI, PLA-SI, PRO-SI, REG-SI, REL-SI, Inventário de Ativos, ROPA) e as converte em regras verificáveis no código. Use antes de auditar, revisar ou escrever código em repositórios da Rocket Code (organização GitHub rocket-repos, como meu-carro-e-seu); quando alguém perguntar o que a política da empresa exige sobre logs, segredos, MFA, autenticação, criptografia, retenção, dados pessoais ou sensíveis, Senatran, backup, monitoramento, CI ou fornecedores; e sempre que outra skill do plugin conformidade pedir.
 ---
 
 # Políticas da Rocket Code
@@ -9,7 +9,7 @@ A única fonte das regras é a pasta de Segurança da Informação no Google Dri
 
 - ID da pasta: `${user_config.drive_folder_id}` (configuração do plugin, opção `drive_folder_id`)
 
-O ID não fica no repositório: vem da configuração do plugin. Se o ID acima estiver vazio ou não parecer um ID do Drive, e não houver `ROCKETCODE_POLICIES_DIR` (ver "Fonte local"), parar e pedir ao usuário para preencher a opção `drive_folder_id` do plugin `rocketcode` em `/config` (ou reativar o plugin para ver o formulário). Não procurar a pasta por nome nem adivinhar o ID.
+O ID não fica no repositório: vem da configuração do plugin. Se o ID acima estiver vazio ou não parecer um ID do Drive, e não houver `ROCKETCODE_POLICIES_DIR` (ver "Fonte local"), parar e pedir ao usuário para preencher a opção `drive_folder_id` do plugin `conformidade` em `/config` (ou reativar o plugin para ver o formulário). Não procurar a pasta por nome nem adivinhar o ID.
 
 As regras mudam quando um documento é publicado ou revisado, e a execução seguinte deve refleti-las. Por isso:
 

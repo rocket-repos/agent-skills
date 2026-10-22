@@ -4,7 +4,7 @@
 
 **Goal:** serviço na VPS que revisa todo PR da `rocket-repos` contra as normas do Drive e bloqueia o merge quando há inconformidade. Ele também audita a `main` diariamente, propõe no Slack mudanças nos documentos (aplicadas só depois de aprovadas), registra liberações e vigia a própria saúde.
 
-**Architecture:** um orquestrador em TypeScript guarda todas as credenciais e faz todas as escritas: GitHub, Slack, Drive e Postgres. Cada análise roda `claude -p` como subprocesso isolado, sem credenciais além do token do modelo. Esse subprocesso usa o plugin `rocketcode` e devolve JSON validado. A lógica de decisão fica em funções puras (`src/core/`); os adaptadores (`src/github`, `src/slack`, `src/drive`) são finos e testados com fakes.
+**Architecture:** um orquestrador em TypeScript guarda todas as credenciais e faz todas as escritas: GitHub, Slack, Drive e Postgres. Cada análise roda `claude -p` como subprocesso isolado, sem credenciais além do token do modelo. Esse subprocesso usa o plugin `conformidade` e devolve JSON validado. A lógica de decisão fica em funções puras (`src/core/`); os adaptadores (`src/github`, `src/slack`, `src/drive`) são finos e testados com fakes.
 
 **Tech Stack:** Node 22, TypeScript 5, vitest, zod, drizzle-orm + `pg` (PGlite nos testes), `octokit` (App + webhooks), `@slack/bolt` (Socket Mode), `googleapis` (Drive, Docs, Sheets), Docker + docker compose.
 
@@ -67,7 +67,7 @@ src/health/credentials.ts     expiryAlerts, probeCredentials
 src/health/incidents.ts       recordFailure, recordRecovery
 src/health/notifier.ts        notify com outbox quando o Slack cai
 src/main.ts                   composição, agendador, workers
-Dockerfile                    imagem do agente (Claude Code + plugin rocketcode)
+Dockerfile                    imagem do agente (Claude Code + plugin conformidade)
 docker-compose.yml            só o agente (Postgres e entrega de webhooks ficam fora)
 deploy/env.example            variáveis sem valores
 deploy/README.md              pré-requisitos e operação
@@ -142,11 +142,11 @@ it('does not claim jobs whose runAfter is in the future', async () => { /* ... *
 
 ---
 
-### Task 2: Mudança no plugin `rocketcode` (repositório agent-skills)
+### Task 2: Mudança no plugin `conformidade` (repositório agent-skills)
 
 **Files:**
-- Modify: `rocketcode/skills/politicas/SKILL.md`
-- Modify: `rocketcode/.claude-plugin/plugin.json` (versão `0.2.0`)
+- Modify: `conformidade/skills/politicas/SKILL.md`
+- Modify: `conformidade/.claude-plugin/plugin.json` (versão `0.2.0`)
 
 **Interfaces:**
 - Produces: quando `ROCKETCODE_POLICIES_DIR` está definido, a skill lê as normas desse diretório em vez do conector. Estrutura do diretório:
@@ -162,8 +162,8 @@ it('does not claim jobs whose runAfter is in the future', async () => { /* ... *
   - Se o diretório estiver vazio ou sem manifesto, parar e dizer que as normas não foram carregadas.
 
   Fora disso, o comportamento atual não muda.
-- [ ] **Step 2: validar.** `claude plugin validate rocketcode`. Esperado: sem erros.
-- [ ] **Step 3: teste manual.** Montar um diretório com dois arquivos exportados à mão e rodar `ROCKETCODE_POLICIES_DIR=<dir> claude -p "Invoque rocketcode:politicas e liste as fontes" --plugin-dir rocketcode`. Esperado: lista os dois arquivos, sem chamar o Drive.
+- [ ] **Step 2: validar.** `claude plugin validate conformidade`. Esperado: sem erros.
+- [ ] **Step 3: teste manual.** Montar um diretório com dois arquivos exportados à mão e rodar `ROCKETCODE_POLICIES_DIR=<dir> claude -p "Invoque conformidade:politicas e liste as fontes" --plugin-dir conformidade`. Esperado: lista os dois arquivos, sem chamar o Drive.
 - [ ] **Step 4: commit no agent-skills.** `git commit -m "feat(rocketcode): politicas lê normas exportadas de ROCKETCODE_POLICIES_DIR"`
 
 ---
@@ -294,8 +294,8 @@ it('deadlinesInWindow puts past dates in overdue and the next 14 days in upcomin
   - `AnalystOutput`: `{ findings: Finding[]; proposals: ProposalDraft[]; deadlines: Array<{ item, document, dueDate: string }> }`.
   - `ProposalDraft`: `{ documentFileId, documentTitle, section, kind: 'replace_text'|'append_rows'|'new_document', currentText: string|null, proposedText: string|null, rows: string[][]|null, reason, evidence }`.
   - `analystJsonSchema`: JSON Schema gerado do zod e passado em `--json-schema`.
-  - `reviewPrompt(input: { repo, pr, baseSha, headSha, isPublic: boolean, priorReleases: ReleaseRecord[], rejectedProposals: string[] }): string`, que manda invocar `rocketcode:revisao` sobre `git diff <base>...<head>`.
-  - `auditPrompt(input: { repo, priorReleases, rejectedProposals, pendingProposals: string[] }): string`, que manda invocar `rocketcode:auditoria` e extrair prazos dos registros REG.
+  - `reviewPrompt(input: { repo, pr, baseSha, headSha, isPublic: boolean, priorReleases: ReleaseRecord[], rejectedProposals: string[] }): string`, que manda invocar `conformidade:revisao` sobre `git diff <base>...<head>`.
+  - `auditPrompt(input: { repo, priorReleases, rejectedProposals, pendingProposals: string[] }): string`, que manda invocar `conformidade:auditoria` e extrair prazos dos registros REG.
   - `prepareWorkdir(dir: string): Promise<void>`, que remove os caminhos listados em Global Constraints.
   - `analystEnv(cfg: Config): Record<string,string>`.
   - `claudeArgs(prompt: string, cfg: Config): string[]`.
@@ -306,7 +306,7 @@ it('deadlinesInWindow puts past dates in overdue and the next 14 days in upcomin
 - [ ] **Step 2: testes que falham.**
 
 ```ts
-it('claudeArgs never includes --bare and loads only the rocketcode plugin', () => {
+it('claudeArgs never includes --bare and loads only the conformidade plugin', () => {
   const a = claudeArgs('x', cfg)
   expect(a).not.toContain('--bare')
   expect(a).toEqual(expect.arrayContaining(['-p', '--output-format', 'json', '--json-schema',
@@ -666,9 +666,9 @@ it('returns timeout and kills the process after timeoutMs', async () => {})
     - Build: `node:22-bookworm-slim`, `npm ci`, `tsc`.
     - Execução: `node:22-bookworm-slim`, com `git` e `ca-certificates`.
       - O Claude Code é instalado com versão fixa (`ARG CLAUDE_CODE_VERSION`, `npm i -g @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}`).
-      - O plugin `rocketcode` vem de um clone do repositório público `rocket-repos/agent-skills` numa ref fixa (`ARG ROCKETCODE_REF`, uma tag ou um SHA) para `/opt/rocketcode`. Atualizar o plugin exige rebuild deliberado, nunca acontece sozinho.
+      - O plugin `conformidade` vem de um clone do repositório público `rocket-repos/agent-skills` numa ref fixa (`ARG ROCKETCODE_REF`, uma tag ou um SHA) para `/opt/rocketcode`. Atualizar o plugin exige rebuild deliberado, nunca acontece sozinho.
       - O processo roda como o usuário sem privilégios `verificador`, com `HOME=/home/verificador`.
-      - `PLUGIN_DIR=/opt/rocketcode/rocketcode`, `POLICIES_CACHE_DIR=/data/cache`, `WORK_ROOT=/data/work`.
+      - `PLUGIN_DIR=/opt/conformidade`, `POLICIES_CACHE_DIR=/data/cache`, `WORK_ROOT=/data/work`.
       - `CMD ["node", "dist/main.js"]` e `HEALTHCHECK` com `curl -fsS http://127.0.0.1:${WEBHOOK_PORT}/healthz`.
   - `docker-compose.yml` com um único serviço:
     - `verificador`:
@@ -685,7 +685,7 @@ it('returns timeout and kills the process after timeoutMs', async () => {})
 - [ ] **Step 2: conferir a imagem.**
   - `docker run --rm verificador-conformidade id -un`: esperado `verificador`.
   - `docker run --rm verificador-conformidade claude --version`: esperado a versão fixada.
-  - `docker run --rm verificador-conformidade ls /opt/rocketcode/rocketcode/skills`: esperado `auditoria`, `conformidade`, `politicas` e `revisao`.
+  - `docker run --rm verificador-conformidade ls /opt/conformidade/skills`: esperado `auditoria`, `conformidade`, `politicas` e `revisao`.
   - `docker run --rm -e ANTHROPIC_API_KEY=x verificador-conformidade`: esperado código de saída diferente de zero e mensagem citando `ANTHROPIC_API_KEY`.
 - [ ] **Step 3: validar o compose.** `docker compose config`. Esperado: sem erros, um único serviço, e a única porta publicada é a de webhooks ligada a `127.0.0.1`.
 - [ ] **Step 4: escrever o `deploy/README.md`.** Ele traz os pré-requisitos da seção 11 da spec, passo a passo:
