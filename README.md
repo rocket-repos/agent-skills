@@ -29,7 +29,7 @@ O ID da pasta não fica neste repositório. Ao ativar o plugin, o Claude Code pe
 
 ```
 claude plugin marketplace add rocket-repos/agent-skills
-claude plugin install rocketcode@rocket-code
+claude plugin install rocketcode@conformidade
 ```
 
 ## Skill Format
