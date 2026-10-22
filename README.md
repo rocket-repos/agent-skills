@@ -12,6 +12,25 @@ Skills are markdown files that provide agents with specialized knowledge on spec
 |-------|-------------|
 | [amazon-associates](./amazon-associates/) | Amazon Associates affiliate program guidance including commission optimization, link strategies, and compliance requirements |
 
+## Plugin `rocketcode`
+
+Skills que aplicam nas bases de código as políticas de segurança da informação e privacidade da Rocket Code. As regras não ficam neste repositório: a cada uso, as skills listam a pasta de Segurança da Informação no Google Drive e leem a versão vigente de cada documento. Uma norma publicada ou revisada vale a partir da execução seguinte.
+
+| Skill | Para quê |
+|-------|----------|
+| [`rocketcode:politicas`](./rocketcode/skills/politicas/) | Lê os documentos do Drive e os converte em regras verificáveis no código. As outras skills a invocam primeiro. |
+| [`rocketcode:auditoria`](./rocketcode/skills/auditoria/) | Audita um repositório inteiro, com evidência por regra e as divergências entre normas e código. |
+| [`rocketcode:revisao`](./rocketcode/skills/revisao/) | Revisa um diff, branch ou PR e separa bloqueantes de recomendações. |
+| [`rocketcode:conformidade`](./rocketcode/skills/conformidade/) | Aplica as regras enquanto o código é escrito. |
+
+Requer o conector **claude.ai Google Drive** autenticado (`/mcp`) e acesso de leitura à pasta de Segurança da Informação.
+
+O ID da pasta não fica neste repositório. Ao ativar o plugin, o Claude Code pede a opção **ID da pasta de Segurança da Informação no Google Drive** (`drive_folder_id`): o trecho depois de `/folders/` na URL da pasta. Para mudar depois, use `/config`. No servidor do Verificador de Conformidade a opção não é usada: as normas vêm exportadas em `ROCKETCODE_POLICIES_DIR`.
+
+```
+/plugin install rocketcode --marketplace roket-code/agent-skills
+```
+
 ## Skill Format
 
 Each skill lives in its own directory with a `SKILL.md` file containing:

@@ -1,0 +1,22 @@
+{
+  "name": "rocketcode",
+  "description": "Skills que aplicam nas bases de código as políticas de segurança da informação e privacidade da Rocket Code, lidas na versão vigente do Google Drive a cada uso.",
+  "version": "0.3.0",
+  "author": {
+    "name": "Rocket Code"
+  },
+  "keywords": [
+    "seguranca",
+    "lgpd",
+    "politicas",
+    "conformidade",
+    "senatran"
+  ],
+  "userConfig": {
+    "drive_folder_id": {
+      "type": "string",
+      "title": "ID da pasta de Segurança da Informação no Google Drive",
+      "description": "ID da pasta que guarda as políticas, normas e registros (o trecho depois de /folders/ na URL da pasta). Não é usado no servidor do Verificador de Conformidade, que lê as normas exportadas em ROCKETCODE_POLICIES_DIR."
+    }
+  }
+}

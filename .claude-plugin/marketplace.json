@@ -1,0 +1,16 @@
+{
+  "name": "agent-skills",
+  "description": "Skills e plugins de agentes mantidos pela Rocket Code",
+  "owner": {
+    "name": "Rocket Code"
+  },
+  "plugins": [
+    {
+      "name": "rocketcode",
+      "source": "./rocketcode",
+      "description": "Aplica nas bases de código as políticas de segurança da informação e privacidade da Rocket Code, lidas na versão vigente do Google Drive a cada uso: carregar políticas, auditar repositório, revisar mudança e implementar em conformidade.",
+      "version": "0.3.0",
+      "category": "security"
+    }
+  ]
+}
